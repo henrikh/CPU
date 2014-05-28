@@ -17,11 +17,11 @@ architecture spec of tb_display is
             regC_out : out std_logic_vector(0 to 7));
     end component;
 
-    signal command : std_logic_vector(0 to 2) := "000";
-    signal first_input_sel : std_logic_vector(0 to 1) := "11";
-    signal second_input_sel : std_logic_vector(0 to 1) := "11";
-    signal write_sel : std_logic_vector(0 to 1) := "00";
-    signal encoded_data : std_logic_vector(0 to 7) := "00111111";
+    component rom is
+        port(
+            instruction_position : in std_logic_vector(0 to 7);
+            instruction: out std_logic_vector(0 to 16));
+    end component;
 
     signal instruction: std_logic_vector(0 to 16);
     signal instruction_position : std_logic_vector(0 to 7);
@@ -32,10 +32,8 @@ architecture spec of tb_display is
     signal reset : std_logic := '1';
 begin
 
-    instruction <= command & first_input_sel & second_input_sel & write_sel & encoded_data;
-
     dut: cpu1 port map(clk, reset, instruction, instruction_position, regA, regB, regC);
-    --rom1: rom port map(instruction_position, instruction);
+    rom1: rom port map(instruction_position, instruction);
 
     -- Clock signal
     process
@@ -47,21 +45,6 @@ begin
         wait for 7 ns;
         reset <= '0';
         wait;
-        wait for 3 ns;
-        wait for 5 ns;
-        assert regA = "00111111" report "Addition to register C malfunctioned";
-        encoded_data <= "00000001";
-        write_sel <= "01";
-        wait for 10 ns;
-        assert regB = "00000001" report "Addition to register C malfunctioned";
-        command <= "001";
-        first_input_sel <= "00";
-        second_input_sel <= "01";
-        write_sel <= "10";
-        wait for 10 ns;
-        assert regC = "01000000" report "Addition to register C malfunctioned";
-        command <= "000";
-        write_sel <= "11";
     end process;
 
 end spec;
