@@ -24,6 +24,7 @@ architecture struct of cpu1 is
 
 
 	signal next_instruction_position : std_logic_vector(0 to 7);
+	signal instruction_position_reg : std_logic_vector(0 to 7);
 
 
 	signal command : std_logic_vector(0 to 2);
@@ -43,10 +44,10 @@ architecture struct of cpu1 is
 
 	signal zero_flag : std_logic;
 	signal positive_flag : std_logic;
-	
+
 	signal next_zero_flag : std_logic;
 	signal next_positive_flag : std_logic;
-	
+
 
 	signal regA_sel : std_logic;
 	signal regB_sel : std_logic;
@@ -55,7 +56,7 @@ begin
 	regA_out <= regA_data;
 	regB_out <= regB_data;
 	regC_out <= regC_data;
-	
+
 	command <= instruction(0 to 2);
 	first_input_sel <= instruction(3 to 4);
 	second_input_sel <= instruction(5 to 6);
@@ -146,7 +147,7 @@ begin
 		if command = "011" then
 			jump_zero_flag <= '1';
 		end if;
-		
+
 		if command = "100" then
 			jump_positive_flag <= '1';
 		end if;
@@ -155,20 +156,22 @@ begin
 	jump_flag <= jump_positive_flag or jump_zero_flag;
 	jump_sel <= (jump_positive_flag and positive_flag) or (jump_zero_flag and zero_flag);
 
-	process(jump_sel, write_output) begin
+	process(jump_sel, instruction_position_reg, write_output) begin
 		if jump_sel = '1' then
 			next_instruction_position <= write_output;
 		else
-			next_instruction_position <= std_logic_vector(unsigned(next_instruction_position) + 1);
+			next_instruction_position <= std_logic_vector(unsigned(instruction_position_reg) + 1);
 		end if;
 	end process;
+	
+	instruction_position <= instruction_position_reg;
 
 	process(clk, reset)
 	begin
 		if reset='1' then
-			instruction_position <= (others => '0');
+			instruction_position_reg <= (others => '0');
 		elsif rising_edge(clk) then
-			instruction_position <= next_instruction_position;
+			instruction_position_reg <= next_instruction_position;
 		end if;
 	end process;
 end struct;
